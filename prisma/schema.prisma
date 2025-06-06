@@ -1,17 +1,66 @@
+generator db {
+  provider  = "prisma-client-py"
+  interface = "sync"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-generator db {
-  provider  = "prisma-client-py"
-  interface = "sync"
+model Users {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  email    String @unique
+  password String
 }
 
-model Users{
-    id       Int     @id @default(autoincrement())
-    username     String   @unique
-    email       String   @unique
-    password    String
+model actors {
+  actor_id     Int          @id
+  actor_name   String?      @db.VarChar(255)
+  gender       Int?
+  profile_path String?
+  movie_cast   movie_cast[]
+}
+
+model genres {
+  genre_id     Int            @id
+  genre_name   String?        @db.VarChar(100)
+  movie_genres movie_genres[]
+}
+
+model movie_cast {
+  movie_id       Int
+  actor_id       Int
+  character_name String? @db.VarChar(255)
+  credit_order   Int?
+  credit_id      String? @db.VarChar(100)
+  actors         actors  @relation(fields: [actor_id], references: [actor_id], onDelete: NoAction, onUpdate: NoAction)
+  movies         movies  @relation(fields: [movie_id], references: [movie_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([movie_id, actor_id])
+}
+
+model movie_genres {
+  movie_id Int
+  genre_id Int
+  genres   genres @relation(fields: [genre_id], references: [genre_id], onDelete: NoAction, onUpdate: NoAction)
+  movies   movies @relation(fields: [movie_id], references: [movie_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([movie_id, genre_id])
+}
+
+model movies {
+  movie_id     Int            @id
+  title        String?        @db.VarChar(255)
+  poster_path  String?
+  release_date DateTime?      @db.Date
+  budget       BigInt?
+  revenue      BigInt?
+  runtime      Float?         @db.Real
+  overview     String?
+  rating       Float?
+  movie_cast   movie_cast[]
+  movie_genres movie_genres[]
 }

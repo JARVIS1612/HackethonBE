@@ -1,7 +1,6 @@
 from prisma.models import Users as PrismaUsers
 from prisma.errors import UniqueViolationError
 
-
 def create_user_in_db(user_data):
     try:
         response = PrismaUsers.prisma().create(data=user_data)
@@ -15,9 +14,4 @@ def create_user_in_db(user_data):
 def find_user_by_email_or_username(email=None, username=None):
     if email:
         return PrismaUsers.prisma().find_first(where={"email": email})
-    return PrismaUsers.prisma().find_first(where={"username": username})
-
-
-def check_email_exists(email: str) -> bool:
-    user = PrismaUsers.prisma().find_first(where={"email": email})
-    return user is not None 
+    return PrismaUsers.prisma().find_first(where={"username": username}) 
