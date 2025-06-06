@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from prisma import Prisma, register
-from Models.models import Users
-import bcrypt
-from Helpers.custom_response import unified_response
 from Modules.authentication import auth
+from Modules.movies import movies
+
 app = FastAPI()
 
 # SQL Database
@@ -12,6 +11,7 @@ db.connect()
 register(db)
 
 app.include_router(auth)
+app.include_router(movies)
 
 @app.get("/")
 async def root():

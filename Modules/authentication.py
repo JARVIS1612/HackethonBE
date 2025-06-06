@@ -1,42 +1,33 @@
 from fastapi import APIRouter
-import bcrypt
-from Models.models import Users as UserSchema
-from Models.models import Login as LoginSchema
+from Models.auth_models import Users as UserSchema
+from Models.auth_models import Login as LoginSchema
 from Helpers.custom_response import unified_response
 from Helpers.jwt_helpers import create_access_token, hash_password, verify_password
-from prisma.models import Users as PrismaUsers
-from prisma.errors import UniqueViolationError
+from database.user_db import create_user_in_db, find_user_by_email_or_username
 
 auth = APIRouter(prefix="/auth", tags=["Auth"])
 
 @auth.post("/signup")
 async def create_user(user: UserSchema):
-    try:
-        hashed_password = hash_password(user.password)
-        user_data = user.model_dump()
-        user_data["password"] = hashed_password
+    hashed_password = hash_password(user.password)
+    user_data = user.model_dump()
+    user_data["password"] = hashed_password
 
-        response = PrismaUsers.prisma().create(data=user_data)
-        return unified_response(True, "User created successfully", data=response.dict())
+    response, error = create_user_in_db(user_data)
+    if response:
+        return unified_response(True, "User created successfully", data=response)
 
-    except UniqueViolationError as error_msg:
-        if "Unique constraint failed on the fields: (`email`)" in str(error_msg):
-            return unified_response(False, "Email already exists", status_code=400)
+    if "Unique constraint failed on the fields: (`email`)" in error:
+        return unified_response(False, "Email already exists", status_code=400)
 
-        if "Unique constraint failed on the fields: (`username`)" in str(error_msg):
-            return unified_response(False, "Username already exists", status_code=400)
+    if "Unique constraint failed on the fields: (`username`)" in error:
+        return unified_response(False, "Username already exists", status_code=400)
 
-    except Exception as e:
-        return unified_response(False, f"An error occurred: {str(e)}", status_code=500)
+    return unified_response(False, f"An error occurred: {error}", status_code=500)
 
 @auth.post("/login")
 async def login(user: LoginSchema):
-    response = ""
-
-    if user.email:
-        response = PrismaUsers.prisma().find_first(where={"email": user.email})
-    else:
-        response = PrismaUsers.prisma().find_first(where={"username": user.username})
+    response = find_user_by_email_or_username(email=user.email, username=user.username)
     if not response:
         return unified_response(False, "User not found", status_code=404)
 

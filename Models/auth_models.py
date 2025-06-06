@@ -5,7 +5,6 @@ class Users(BaseModel):
     email: str
     password: str
 
-
 class Login(BaseModel):
     username: str | None = None
     password: str

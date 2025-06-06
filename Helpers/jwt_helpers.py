@@ -1,6 +1,7 @@
 from jose import jwt
 from datetime import datetime, timedelta
 import bcrypt
+from database import user_db
 
 SECRET_KEY = "your_secret_key"  # Use environment variable in production
 ALGORITHM = "HS256"
@@ -17,3 +18,15 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+def verify_access_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload:
+            result = user_db.find_user_by_email_or_username(email=payload.get("email"))
+            return result and payload
+        
+    except jwt.ExpiredSignatureError:
+        return False
+    except jwt.JWTError:
+        return False
