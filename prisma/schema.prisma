@@ -9,7 +9,9 @@ generator db {
   interface = "sync"
 }
 
-model test{
+model Users{
     id       Int     @id @default(autoincrement())
-    name     String
+    username     String   @unique
+    email       String   @unique
+    password    String
 }
