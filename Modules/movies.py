@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 
 movies = APIRouter(prefix="/movie", tags=["Movies"])
+POSTER_PATH_URL='https://5aca-27-5-183-17.ngrok-free.app'
 
 
 def format_movie_data(movie_data):
@@ -48,7 +49,7 @@ def format_movie_data(movie_data):
     return {
         "movie_id": movie_data.movie_id,
         "title": movie_data.title,
-        "poster_path": "/poster/"+str(movie_data.movie_id)+".jpg",
+        "poster_path": POSTER_PATH_URL+"/posters/"+str(movie_data.movie_id)+".jpg",
         "release_date": movie_data.release_date.isoformat() if movie_data.release_date else None,
         "budget": movie_data.budget,
         "revenue": movie_data.revenue,
