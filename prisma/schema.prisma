@@ -9,8 +9,9 @@ generator db {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = "mysql://u511026640_hackthon:Doyourjob@123@srv1192.hstgr.io:3306/u511026640_hackthon"
+  provider          = "mysql"
+  url               = "mysql://u511026640_hackthon:Doyourjob@123@srv1192.hstgr.io:3306/u511026640_hackthon"
+  shadowDatabaseUrl = "mysql://u511026640_shadow:Doyourjob@123@srv1192.hstgr.io:3306/u511026640_shadow"
 }
 
 model Users {
@@ -44,6 +45,7 @@ model movie_cast {
   movies         movies  @relation(fields: [movie_id], references: [movie_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([movie_id, actor_id])
+  @@index([actor_id], map: "movie_cast_actor_id_fkey")
 }
 
 model movie_genres {
@@ -53,6 +55,7 @@ model movie_genres {
   movies   movies @relation(fields: [movie_id], references: [movie_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([movie_id, genre_id])
+  @@index([genre_id], map: "movie_genres_genre_id_fkey")
 }
 
 model movies {
@@ -63,7 +66,7 @@ model movies {
   budget       BigInt?
   revenue      BigInt?
   runtime      Float?         @db.Float
-  overview     String?
+  overview     String?        @db.LongText
   rating       Float?
   movie_cast   movie_cast[]
   movie_genres movie_genres[]
