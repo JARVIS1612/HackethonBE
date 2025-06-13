@@ -11,10 +11,13 @@ from database.movie_db import (
 )
 from Helpers.custom_response import unified_response
 import os
-from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+POSTER_PATH_URL = os.getenv("POSTER_PATH_URL")
 
 movies = APIRouter(prefix="/movie", tags=["Movies"])
-POSTER_PATH_URL='https://5aca-27-5-183-17.ngrok-free.app'
+
 
 
 def format_movie_data(movie_data):
@@ -45,7 +48,6 @@ def format_movie_data(movie_data):
                 "genre_name": genre_relation.genres.genre_name
             } if genre_relation.genres else None
         })
-    
     return {
         "movie_id": movie_data.movie_id,
         "title": movie_data.title,
@@ -192,20 +194,4 @@ async def get_all_genres():
         })
     
     return unified_response(True, "Genres fetched successfully", data={"genres": formatted_genres})
-
-
-@movies.get("/poster/{poster_path:path}")
-async def get_movie_poster(poster_path: str):
-
-    POSTER_DIR = "./posters"  
-    
-    file_path = Path(POSTER_DIR) / poster_path
-    
-    if not os.path.exists(file_path):
-        return unified_response(False, "Poster not found", status_code=404)
-    
-    try:
-        return FileResponse(file_path, media_type="image/jpeg")
-    except Exception as e:
-        return unified_response(False, f"Error serving poster file: {str(e)}", status_code=500)
 
