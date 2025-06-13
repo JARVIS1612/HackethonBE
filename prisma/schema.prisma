@@ -16,10 +16,12 @@ datasource db {
 }
 
 model Users {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  email    String @unique
-  password String
+  id              Int               @id @default(autoincrement())
+  username        String            @unique
+  email           String            @unique
+  password        String
+  searchHistory   UserSearchHistory[]
+  favorites       UserFavorites[]
 }
 
 model actors {
@@ -71,4 +73,29 @@ model movies {
   rating       Float?
   movie_cast   movie_cast[]
   movie_genres movie_genres[]
+
+  UserFavorites UserFavorites[]
+}
+
+model UserSearchHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  query     String
+  timestamp DateTime @default(now())
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserFavorites {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  movieId   Int
+  timestamp DateTime @default(now())
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie     movies   @relation(fields: [movieId], references: [movie_id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([userId])
+  @@index([movieId])
 }

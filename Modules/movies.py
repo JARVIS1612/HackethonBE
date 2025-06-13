@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, Depends
 from fastapi.responses import FileResponse
 from typing import Optional
-from Models.movie_list_models import MovieListResponse, MovieDetailResponse, MovieModel, GenreModel
+from Models.movie_list_models import MovieListResponse, MovieDetailResponse
 from database.movie_db import (
     get_all_movies_from_db, 
     get_movie_by_id_from_db, 
@@ -12,6 +12,10 @@ from database.movie_db import (
 from Helpers.custom_response import unified_response
 import os
 from dotenv import load_dotenv
+
+from database.user_activity_db import add_search_history, search_movies
+from Modules.authentication import get_current_user
+from pathlib import Path
 
 load_dotenv()
 POSTER_PATH_URL = os.getenv("POSTER_PATH_URL")
@@ -195,3 +199,31 @@ async def get_all_genres():
     
     return unified_response(True, "Genres fetched successfully", data={"genres": formatted_genres})
 
+
+@movies.get("/poster/{poster_path:path}")
+async def get_movie_poster(poster_path: str):
+
+    POSTER_DIR = "./posters"  
+    
+    file_path = Path(POSTER_DIR) / poster_path
+    
+    if not os.path.exists(file_path):
+        return unified_response(False, "Poster not found", status_code=404)
+    
+    try:
+        return FileResponse(file_path, media_type="image/jpeg")
+    except Exception as e:
+        return unified_response(False, f"Error serving poster file: {str(e)}", status_code=500)
+
+
+@movies.get("/search")
+async def search_movies_endpoint(query: str, current_user: dict = Depends(get_current_user)):
+    movies, error = await search_movies(query)
+    if error:
+        return unified_response(False, f"Error searching movies: {error}", status_code=500)
+    
+    search_history, history_error = await add_search_history(current_user["id"], query)
+    if history_error:
+        print(f"Error recording search history: {history_error}")
+    
+    return unified_response(True, "Search completed successfully", data=movies)

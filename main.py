@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from prisma import Prisma, register
 from Modules.authentication import auth
 from Modules.movies import movies
+from Modules.user_activity import router as user_activity
 
 app = FastAPI()
 
@@ -22,6 +23,7 @@ register(db)
 
 app.include_router(auth)
 app.include_router(movies)
+app.include_router(user_activity)
 
 @app.get("/")
 async def root():

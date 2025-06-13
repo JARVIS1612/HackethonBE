@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, HTTPException
 from typing import Optional
 from Models.auth_models import Users as UserSchema
 from Models.auth_models import Login as LoginSchema
@@ -7,6 +7,22 @@ from Helpers.jwt_helpers import create_access_token, hash_password, verify_passw
 from database.user_db import create_user_in_db, find_user_by_email_or_username
 
 auth = APIRouter(prefix="/auth", tags=["Auth"])
+
+async def get_current_user(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid token format")
+    
+    token = authorization.split(" ")[1]
+    payload = verify_access_token(token)
+    
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = find_user_by_email_or_username(email=payload.get("sub"))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"id": user.id, "email": user.email, "username": user.username}
 
 @auth.post("/signup")
 async def create_user(user: UserSchema):
@@ -33,9 +49,9 @@ async def login(user: LoginSchema):
         return unified_response(False, "User not found", status_code=404)
 
     if verify_password(user.password, response.password):
-        token_data = {"sub": response.email, "id": response.id}
+        token_data = {"email": response.email, "id": response.id}
         token = create_access_token(token_data)
-        return unified_response(True, "Login successful", data=create_access_token({"token": token}))
+        return unified_response(True, "Login successful", data=token)
     else:
         return unified_response(False, "Invalid password", status_code=401)
 
@@ -48,9 +64,9 @@ async def verify_token(authorization: Optional[str] = Header(None)):
     token = authorization.split(" ")[1]
     payload = verify_access_token(token)
     
-    if payload:
+    if not payload:
         return unified_response(False, payload, status_code=401)
     
-    return unified_response(True, "Token is valid", data={"payload": payload})
+    return unified_response(True, "Token is valid", data=payload, status_code=200)
     
     

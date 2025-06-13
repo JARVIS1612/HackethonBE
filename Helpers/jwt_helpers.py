@@ -9,7 +9,7 @@ EXPIRY_MINUTES = 60
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=EXPIRY_MINUTES))
+    expire = datetime.now() + (expires_delta or timedelta(minutes=EXPIRY_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -23,8 +23,8 @@ def verify_access_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload:
-            # result = user_db.find_user_by_email_or_username(email=payload.get("email"))
-            return True
+            result = user_db.find_user_by_email_or_username(email=payload.get("email"))
+            return result.model_dump()
         
     except jwt.ExpiredSignatureError:
         return False
