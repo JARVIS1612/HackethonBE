@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
+from typing import Optional
 from Models.auth_models import Users as UserSchema
 from Models.auth_models import Login as LoginSchema
 from Helpers.custom_response import unified_response
-from Helpers.jwt_helpers import create_access_token, hash_password, verify_password
+from Helpers.jwt_helpers import create_access_token, hash_password, verify_password, verify_access_token
 from database.user_db import create_user_in_db, find_user_by_email_or_username
 
 auth = APIRouter(prefix="/auth", tags=["Auth"])
@@ -37,3 +38,19 @@ async def login(user: LoginSchema):
         return unified_response(True, "Login successful", data=create_access_token({"token": token}))
     else:
         return unified_response(False, "Invalid password", status_code=401)
+
+@auth.get("/verify-token")
+async def verify_token(authorization: Optional[str] = Header(None)):
+    print(authorization)
+    if not authorization or not authorization.startswith("Bearer "):
+        return unified_response(False, "Invalid token format", status_code=401)
+    
+    token = authorization.split(" ")[1]
+    payload = verify_access_token(token)
+    
+    if payload:
+        return unified_response(False, payload, status_code=401)
+    
+    return unified_response(True, "Token is valid", data={"payload": payload})
+    
+    

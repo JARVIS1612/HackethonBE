@@ -4,9 +4,8 @@ generator db {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "mysql"
+  url      = "mysql://u511026640_hackthon:Doyourjob@123@srv1192.hstgr.io:3306/u511026640_hackthon"
 }
 
 model Users {
@@ -58,7 +57,7 @@ model movies {
   release_date DateTime?      @db.Date
   budget       BigInt?
   revenue      BigInt?
-  runtime      Float?         @db.Real
+  runtime      Float?         @db.Float
   overview     String?
   rating       Float?
   movie_cast   movie_cast[]

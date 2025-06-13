@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import bcrypt
 from database import user_db
 
-SECRET_KEY = "your_secret_key"  # Use environment variable in production
+SECRET_KEY = "your_secret_key" 
 ALGORITHM = "HS256"
 EXPIRY_MINUTES = 60
 
@@ -23,8 +23,8 @@ def verify_access_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload:
-            result = user_db.find_user_by_email_or_username(email=payload.get("email"))
-            return result and payload
+            # result = user_db.find_user_by_email_or_username(email=payload.get("email"))
+            return True
         
     except jwt.ExpiredSignatureError:
         return False

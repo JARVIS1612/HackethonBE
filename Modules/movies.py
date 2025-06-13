@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query, HTTPException
+from fastapi.responses import FileResponse
 from typing import Optional
 from Models.movie_list_models import MovieListResponse, MovieDetailResponse, MovieModel, GenreModel
 from database.movie_db import (
@@ -9,16 +10,16 @@ from database.movie_db import (
     get_all_genres_from_db
 )
 from Helpers.custom_response import unified_response
+import os
+from pathlib import Path
 
 movies = APIRouter(prefix="/movie", tags=["Movies"])
 
 
 def format_movie_data(movie_data):
-    """Helper function to format movie data from database"""
     if not movie_data:
         return None
     
-    # Format cast data
     cast = []
     for cast_member in movie_data.movie_cast or []:
         cast.append({
@@ -34,7 +35,6 @@ def format_movie_data(movie_data):
             } if cast_member.actors else None
         })
     
-    # Format genres data
     genres = []
     for genre_relation in movie_data.movie_genres or []:
         genres.append({
@@ -48,7 +48,7 @@ def format_movie_data(movie_data):
     return {
         "movie_id": movie_data.movie_id,
         "title": movie_data.title,
-        "poster_path": movie_data.poster_path,
+        "poster_path": "/poster/"+str(movie_data.movie_id)+".jpg",
         "release_date": movie_data.release_date.isoformat() if movie_data.release_date else None,
         "budget": movie_data.budget,
         "revenue": movie_data.revenue,
@@ -67,7 +67,6 @@ async def get_all_movies(
     genre_id: Optional[int] = Query(None, description="Filter by genre ID"),
     search: Optional[str] = Query(None, description="Search movies by title")
 ):
-    """Get all movies with pagination and optional filtering"""
     movies_data, total_count, error = get_all_movies_from_db(
         page=page, 
         page_size=page_size, 
@@ -78,7 +77,6 @@ async def get_all_movies(
     if error:
         return unified_response(False, f"Error fetching movies: {error}", status_code=500)
     
-    # Format the movie data
     formatted_movies = []
     for movie in movies_data:
         formatted_movie = format_movie_data(movie)
@@ -127,7 +125,6 @@ async def get_movies_by_genre(
     if error:
         return unified_response(False, f"Error fetching movies by genre: {error}", status_code=500)
     
-    # Format the movie data
     formatted_movies = []
     for movie in movies_data:
         formatted_movie = format_movie_data(movie)
@@ -161,7 +158,6 @@ async def get_movies_by_actor(
     if error:
         return unified_response(False, f"Error fetching movies by actor: {error}", status_code=500)
     
-    # Format the movie data
     formatted_movies = []
     for movie in movies_data:
         formatted_movie = format_movie_data(movie)
@@ -187,7 +183,6 @@ async def get_all_genres():
     if error:
         return unified_response(False, f"Error fetching genres: {error}", status_code=500)
     
-    # Format genres data
     formatted_genres = []
     for genre in genres_data:
         formatted_genres.append({
@@ -196,4 +191,20 @@ async def get_all_genres():
         })
     
     return unified_response(True, "Genres fetched successfully", data={"genres": formatted_genres})
+
+
+@movies.get("/poster/{poster_path:path}")
+async def get_movie_poster(poster_path: str):
+
+    POSTER_DIR = "./posters"  
+    
+    file_path = Path(POSTER_DIR) / poster_path
+    
+    if not os.path.exists(file_path):
+        return unified_response(False, "Poster not found", status_code=404)
+    
+    try:
+        return FileResponse(file_path, media_type="image/jpeg")
+    except Exception as e:
+        return unified_response(False, f"Error serving poster file: {str(e)}", status_code=500)
 
