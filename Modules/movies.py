@@ -47,7 +47,8 @@ def format_movie_data(movie_data):
             "genre_id": genre_relation.genre_id,
             "genre": {
                 "genre_id": genre_relation.genres.genre_id,
-                "genre_name": genre_relation.genres.genre_name
+                "genre_name": genre_relation.genres.genre_name,
+                "genre_poster":POSTER_PATH_URL+"/genres/"+str(genre_relation.genres.genre_name)+".gif"
             } if genre_relation.genres else None
         })
     return {
@@ -196,7 +197,7 @@ async def get_movies_by_genre(
         "total_count": total_count,
         "page": page,
         "page_size": page_size,
-        "genre_id": genre_id
+        "genre_id": genre_id,
     }
     
     return unified_response(True, f"Movies for genre {genre_id} fetched successfully", data=response_data)
@@ -213,7 +214,8 @@ async def get_all_genres():
     for genre in genres_data:
         formatted_genres.append({
             "genre_id": genre.genre_id,
-            "genre_name": genre.genre_name
+            "genre_name": genre.genre_name,
+            "genre_poster":POSTER_PATH_URL+"/genres/"+str(genre.genre_name)+".gif"
         })
     
     return unified_response(True, "Genres fetched successfully", data={"genres": formatted_genres})
