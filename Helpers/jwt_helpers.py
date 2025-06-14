@@ -24,7 +24,7 @@ def verify_access_token(token: str):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload:
             result = user_db.find_user_by_email_or_username(email=payload.get("email"))
-            return result.model_dump()
+            return result
         
     except jwt.ExpiredSignatureError:
         return False

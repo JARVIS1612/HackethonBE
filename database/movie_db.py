@@ -1,9 +1,15 @@
 # This file will contain functions for handling movie-related database operations.
 from prisma.models import movies as PrismaMovies, actors as PrismaActors, genres as PrismaGenres
 from typing import List, Optional
+from prisma import Prisma
 
 
-def get_all_movies_from_db(page: int = 1, page_size: int = 10, genre_id: Optional[int] = None, search: Optional[str] = None):
+def get_all_movies_from_db(
+        page: int = 1, 
+        page_size: int = 10, 
+        genre_id: Optional[int] = None, 
+        top_n_movies: Optional[int] = None
+    ):
     """
     Get all movies with pagination and optional filtering
     """
@@ -12,6 +18,7 @@ def get_all_movies_from_db(page: int = 1, page_size: int = 10, genre_id: Optiona
         
         # Build where clause
         where_clause = {}
+        order_by_clause = []
         if genre_id:
             where_clause["movie_genres"] = {
                 "some": {
@@ -19,17 +26,12 @@ def get_all_movies_from_db(page: int = 1, page_size: int = 10, genre_id: Optiona
                 }
             }
         
-        if search:
-            where_clause["title"] = {
-                "contains": search,
-                "mode": "insensitive"
-            }
-        
         # Get movies with related data
         movies = PrismaMovies.prisma().find_many(
             where=where_clause,
             skip=skip,
             take=page_size,
+            order=order_by_clause,
             include={
                 "movie_cast": {
                     "include": {
@@ -139,7 +141,81 @@ def get_all_genres_from_db():
     except Exception as e:
         return None, str(e)
 
-# Example function for future use:
-# def get_all_movies_from_db():
-#     # Implement database logic to retrieve all movies
-#     pass 
+def get_top_n_movies(n, genre_id):
+    try:
+        where_clause = {}
+        where_clause['revenue'] = {
+            'gt': 0
+        }
+
+        if genre_id:
+            where_clause['genre_id'] = genre_id
+        
+        order_by_clause = [
+            {
+                'rating': 'desc',
+            },
+            {
+                'release_date': 'desc',
+            },
+            {
+                'revenue': 'desc',
+            },
+        ]
+
+        movies = PrismaMovies.prisma().find_many(
+                where=where_clause,
+                skip=0,
+                take=n,
+                order=order_by_clause
+            )
+        
+        total_count = PrismaMovies.prisma().count(where=where_clause)
+            
+        return movies, total_count, None
+    except Exception as e:
+        return None, str(e)
+    
+def get_favourits_movies(
+    page: int = 1,
+    page_size: int = 10,
+    genre_id: Optional[int] = None,
+    current_user_id: int = None
+):
+    try:
+        db = Prisma()
+        db.connect()
+
+        skip = (page - 1) * page_size
+
+        genre_filter = f"AND mg.genre_id = {genre_id}" if genre_id else ""
+
+        query = f"""
+        SELECT DISTINCT m.*
+        FROM movies m
+        JOIN UserFavorites uf ON uf.movieId = m.movie_id
+        LEFT JOIN movie_genres mg ON mg.movie_id = m.movie_id
+        WHERE uf.userId = {current_user_id}
+        {genre_filter}
+        ORDER BY uf.timestamp DESC
+        LIMIT {page_size} OFFSET {skip};
+        """
+
+        count_query = f"""
+        SELECT COUNT(DISTINCT m.movie_id) AS total
+        FROM movies m
+        JOIN UserFavorites uf ON uf.movieId = m.movie_id
+        LEFT JOIN movie_genres mg ON mg.movie_id = m.movie_id
+        WHERE uf.userId = {current_user_id}
+        {genre_filter};
+        """
+
+        movies = db.query_raw(query)
+        print("---------", movies)
+        count_result = db.query_raw(count_query)
+        total_count = count_result[0]['total'] if count_result else 0
+
+        return movies, total_count, None
+
+    except Exception as e:
+        return None, 0, str(e)

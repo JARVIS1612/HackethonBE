@@ -13,12 +13,8 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Invalid token format")
     
     token = authorization.split(" ")[1]
-    payload = verify_access_token(token)
+    user = verify_access_token(token)
     
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    user = find_user_by_email_or_username(email=payload.get("sub"))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     

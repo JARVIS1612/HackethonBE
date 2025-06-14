@@ -3,12 +3,12 @@ from typing import Optional, Tuple, List
 
 def add_search_history(user_id: int, query: str) -> Tuple[Optional[dict], Optional[str]]:
     try:
-        search_history = UserSearchHistory.prisma().create({
-            "data": {
-                "userId": user_id,
+        search_history = UserSearchHistory.prisma().create(
+            data= {
+                "user":{"connect":{"id": user_id}},
                 "query": query
             }
-        })
+        )
         return search_history, None
     except Exception as e:
         return None, str(e)
@@ -55,30 +55,21 @@ def search_movies(query: str) -> Tuple[Optional[List[dict]], Optional[str]]:
 
 def add_favorite(user_id: int, movie_id: int) -> Tuple[Optional[dict], Optional[str]]:
     try:
-        movie = Movies.prisma().find_unique(
-            where={"movie_id": movie_id}
-        )
+        movie = Movies.prisma().find_unique(where={"movie_id": movie_id})
         if not movie:
             return None, "Movie not found"
-        
-        favorite = UserFavorites.prisma().create({
-            "data": {
-                "userId": user_id,
-                "movieId": movie_id
-            }
-        })
-        return favorite, None
-    except Exception as e:
-        return None, str(e)
 
-def get_favorites(user_id: int) -> Tuple[Optional[List[dict]], Optional[str]]:
-    try:
-        favorites = UserFavorites.prisma().find_many(
-            where={"userId": user_id},
-            include={"movie": True},
-            order={"timestamp": "desc"}
+        UserFavorites.prisma().create(
+            data={
+                'user': {
+                    'connect': {'id': user_id}
+                },
+                'movie': {
+                    'connect': {'movie_id': movie_id}
+                }
+            }
         )
-        return favorites, None
+        return "Success", None
     except Exception as e:
         return None, str(e)
 

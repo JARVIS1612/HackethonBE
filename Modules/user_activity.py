@@ -6,7 +6,6 @@ from database.user_activity_db import (
     delete_search_history,
     search_movies,
     add_favorite,
-    get_favorites,
     remove_favorite
 )
 from Helpers.custom_response import unified_response
@@ -48,14 +47,6 @@ def add_movie_to_favorites(movie_id: int, current_user: dict = Depends(get_curre
         return unified_response(False, f"Error adding favorite: {error}", status_code=500)
     
     return unified_response(True, "Movie added to favorites", data=favorite)
-
-@router.get("/favorites")
-def get_user_favorites(current_user: dict = Depends(get_current_user)):
-    favorites, error = get_favorites(current_user["id"])
-    if error:
-        return unified_response(False, f"Error fetching favorites: {error}", status_code=500)
-    
-    return unified_response(True, "Favorites retrieved successfully", data=favorites)
 
 @router.delete("/favorites/{movie_id}")
 def remove_movie_from_favorites(movie_id: int, current_user: dict = Depends(get_current_user)):
