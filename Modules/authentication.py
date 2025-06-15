@@ -49,7 +49,7 @@ async def login(user: LoginSchema):
         token = create_access_token(token_data)
         return unified_response(True, "Login successful", data=token)
     else:
-        return unified_response(False, "Invalid password", status_code=401)
+        return unified_response(False, "Invalid password", status_code=404)
 
 @auth.get("/verify-token")
 async def verify_token(authorization: Optional[str] = Header(None)):

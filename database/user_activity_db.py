@@ -1,5 +1,8 @@
-from prisma.models import UserSearchHistory, movies as Movies, UserFavorites
+from prisma.models import UserSearchHistory, movies as Movies, UserFavorites, Users as PrismaUsers
 from typing import Optional, Tuple, List
+from prisma import Prisma
+
+db = Prisma()
 
 def add_search_history(user_id: int, query: str) -> Tuple[Optional[dict], Optional[str]]:
     try:
@@ -98,3 +101,21 @@ def remove_favorite(user_id: int, movie_id: int) -> Tuple[Optional[dict], Option
         return deleted, None
     except Exception as e:
         return None, str(e)
+
+def update_user_preferences(user_id: int, languages: str, genres: str) -> Tuple[bool, Optional[str]]:
+    """
+    Update user preferences in the database
+    """
+    try:
+        updated_user = PrismaUsers.prisma().update(
+            where={
+                "id": user_id
+            },
+            data={
+                "languages": languages,
+                "genres": genres
+            }
+        )
+        return True, None
+    except Exception as e:
+        return False, str(e)

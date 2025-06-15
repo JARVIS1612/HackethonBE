@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 from Modules.authentication import get_current_user
 from database.user_activity_db import (
     add_search_history,
@@ -6,9 +6,11 @@ from database.user_activity_db import (
     delete_search_history,
     search_movies,
     add_favorite,
-    remove_favorite
+    remove_favorite,
+    update_user_preferences
 )
 from Helpers.custom_response import unified_response
+from typing import List
 
 router = APIRouter(prefix="/user-activity", tags=["User Activity"])
 
@@ -54,4 +56,24 @@ def remove_movie_from_favorites(movie_id: int, current_user: dict = Depends(get_
     if error:
         return unified_response(False, f"Error removing favorite: {error}", status_code=500)
     
-    return unified_response(True, "Movie removed from favorites") 
+    return unified_response(True, "Movie removed from favorites")
+
+@router.post("/preferences")
+async def update_preferences(
+    languages: str = Body(...),
+    genres: str = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update user preferences including languages and genres
+    """
+    success, error = update_user_preferences(
+        user_id=current_user["id"],
+        languages=languages,
+        genres=genres
+    )
+    
+    if error:
+        return unified_response(False, f"Error updating preferences: {error}", status_code=500)
+    
+    return unified_response(True, "Preferences updated successfully") 
