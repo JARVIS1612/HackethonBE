@@ -70,7 +70,7 @@ async def get_all_movies(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(10, ge=1, le=100, description="Number of movies per page"),
     genre_id: Optional[int] = Query(None, description="Filter by genre ID"),
-    top_n_movies: Optional[int] = Query(None, description="Filter by top N movies")
+    top_n_movies: Optional[int] = Query(None, description="Filter by top N movies"),
 ):
     movies_data, total_count, error = get_all_movies_from_db(
         page=page, 
@@ -111,7 +111,7 @@ def filter_movies_endpoint(
 
     if top_n_movies:
         movies_data, total_count, error = get_top_n_movies(
-            top_n_movies=top_n_movies, genre_id=genre_id
+            n=top_n_movies, genre_id=genre_id
         )
     
     elif favourits_movies:
