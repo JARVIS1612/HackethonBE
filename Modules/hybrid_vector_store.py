@@ -5,6 +5,12 @@ from datetime import datetime
 from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Optional
 import os
+from dotenv import load_dotenv
+from database.movie_db import get_movie_by_id_from_db
+from Modules.movies import format_movie_data
+
+load_dotenv()
+POSTER_PATH_URL = os.getenv("POSTER_PATH_URL")
 
 class HybridVectorStore:
     def __init__(self):
@@ -59,7 +65,14 @@ class HybridVectorStore:
             if idx < len(self.movie_ids):
                 movie_id = self.movie_ids[idx]
                 movie_data = self.movie_metadata.get(movie_id, {})
+             
+                data, error = get_movie_by_id_from_db(movie_data.get("movie_id"))
+                if data:
+                    movie_data = format_movie_data(data)
                 movie_data['similarity_score'] = float(1 / (1 + distances[0][i]))
+
+                if movie_data.get("description"):
+                    movie_data["overview"] = movie_data["description"]
                 results.append(movie_data)
         
         return results

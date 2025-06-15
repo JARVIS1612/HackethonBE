@@ -6,7 +6,7 @@ from Helpers.jwt_helpers import get_current_user
 vector_search = APIRouter(prefix="/vector", tags=["Vector Search"])
 vector_store = HybridVectorStore()
 
-@vector_search.post("/search")
+@vector_search.get("/search")
 async def search_movies(
     query: str,
     k: int = 5,
