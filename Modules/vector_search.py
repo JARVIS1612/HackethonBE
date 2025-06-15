@@ -64,4 +64,42 @@ async def recommend_movies(
             "message": "Recommendations generated successfully"
         }
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@vector_search.post("/genre-recommendations")
+async def get_genre_recommendations(
+    genre: str,
+    k: int = 5,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Get movie recommendations based on genre.
+    The search will look for movies that match the genre in their metadata.
+    """
+    try:
+        # Create a query that emphasizes the genre
+        query = f"movies in the {genre} genre"
+        results = vector_store.search(query, k)
+        
+        # Filter results to ensure they have the requested genre
+        genre_results = [
+            movie for movie in results 
+            if genre.lower() in [g.lower() for g in movie.get('genres', [])]
+        ]
+        
+        # If we don't have enough genre-specific results, add more from the original results
+        if len(genre_results) < k:
+            remaining = k - len(genre_results)
+            additional_results = [
+                movie for movie in results 
+                if movie not in genre_results
+            ][:remaining]
+            genre_results.extend(additional_results)
+        
+        return {
+            "success": True,
+            "data": genre_results,
+            "message": f"Found {len(genre_results)} movies in the {genre} genre"
+        }
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
