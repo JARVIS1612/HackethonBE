@@ -63,6 +63,6 @@ async def verify_token(authorization: Optional[str] = Header(None)):
     if not payload:
         return unified_response(False, payload, status_code=401)
     
-    return unified_response(True, "Token is valid", data=payload, status_code=200)
+    return unified_response(True, "Token is valid", data=payload.model_dump(), status_code=200)
     
     

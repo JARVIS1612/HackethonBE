@@ -20,6 +20,9 @@ model Users {
   username        String            @unique
   email           String            @unique
   password        String
+  location        String            @default("")
+  languages       String            @default("")
+  genres          String            @default("")
   searchHistory   UserSearchHistory[]
   favorites       UserFavorites[]
 }
