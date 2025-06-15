@@ -62,6 +62,7 @@ def remove_movie_from_favorites(movie_id: int, current_user: dict = Depends(get_
 async def update_preferences(
     languages: str = Body(...),
     genres: str = Body(...),
+    location: str = Body(...),
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -70,7 +71,8 @@ async def update_preferences(
     success, error = update_user_preferences(
         user_id=current_user["id"],
         languages=languages,
-        genres=genres
+        genres=genres,
+        location=location
     )
     
     if error:

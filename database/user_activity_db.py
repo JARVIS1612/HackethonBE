@@ -102,7 +102,7 @@ def remove_favorite(user_id: int, movie_id: int) -> Tuple[Optional[dict], Option
     except Exception as e:
         return None, str(e)
 
-def update_user_preferences(user_id: int, languages: str, genres: str) -> Tuple[bool, Optional[str]]:
+def update_user_preferences(user_id: int, languages: str, genres: str, location: str) -> Tuple[bool, Optional[str]]:
     """
     Update user preferences in the database
     """
@@ -113,7 +113,8 @@ def update_user_preferences(user_id: int, languages: str, genres: str) -> Tuple[
             },
             data={
                 "languages": languages,
-                "genres": genres
+                "genres": genres,
+                "location": location
             }
         )
         return True, None
