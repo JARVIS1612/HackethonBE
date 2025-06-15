@@ -54,10 +54,10 @@ async def process_movies(
 
 @vector_search.get("/recommend")
 async def recommend_movies(
-    current_user: Dict = Depends(get_current_user)
+    current_user: Dict = Depends(get_current_user),
+    k: int = 5
 ):
     try:
-        k = 5
         temp_query = f"{current_user.location} {current_user.genres} {current_user.languages}"        
         results = vector_store.search(temp_query, k)
         response = []
