@@ -2,10 +2,14 @@ from jose import jwt
 from datetime import datetime, timedelta
 import bcrypt
 from database import user_db
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 SECRET_KEY = "your_secret_key" 
 ALGORITHM = "HS256"
 EXPIRY_MINUTES = 60
+
+security = HTTPBearer()
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -30,3 +34,13 @@ def verify_access_token(token: str):
         return False
     except jwt.JWTError:
         return False
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    user = verify_access_token(credentials.credentials)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user
