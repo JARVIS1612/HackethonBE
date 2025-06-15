@@ -50,14 +50,14 @@ async def process_movies(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@vector_search.post("/recommend")
+@vector_search.get("/recommend")
 async def recommend_movies(
-    query: str,
-    k: int = 5,
     current_user: Dict = Depends(get_current_user)
 ):
     try:
-        results = vector_store.search(query, k)
+        k = 5
+        temp_query = f"{current_user.location} {current_user.genres} {current_user.languages}"        
+        results = vector_store.search(temp_query, k)
         return {
             "success": True,
             "data": results,
