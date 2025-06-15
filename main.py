@@ -4,6 +4,7 @@ from prisma import Prisma, register
 from Modules.authentication import auth
 from Modules.movies import movies
 from Modules.user_activity import router as user_activity
+from Modules.vector_search import vector_search
 
 app = FastAPI()
 
@@ -24,6 +25,7 @@ register(db)
 app.include_router(auth)
 app.include_router(movies)
 app.include_router(user_activity)
+app.include_router(vector_search)
 
 @app.get("/")
 async def root():
