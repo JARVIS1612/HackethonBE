@@ -1,5 +1,5 @@
 # This file will contain functions for handling movie-related database operations.
-from prisma.models import movies as PrismaMovies, actors as PrismaActors, genres as PrismaGenres
+from prisma.models import movies as PrismaMovies, actors as PrismaActors, genres as PrismaGenres, UserFavorites
 from typing import List, Optional
 from prisma import Prisma
 
@@ -181,41 +181,38 @@ def get_favorites_movies(
     page_size: int = 10,
     genre_id: Optional[int] = None,
     current_user_id: int = None
-):
+) -> tuple[List[dict], int, Optional[str]]:
     try:
-        db = Prisma()
-        db.connect()
-
         skip = (page - 1) * page_size
 
-        genre_filter = f"AND mg.genre_id = {genre_id}" if genre_id else ""
+        # Build the filter condition
+        filter_condition = {
+            "userId": current_user_id,
+            "movie": {
+                "genres": {
+                    "some": {
+                        "genre_id": genre_id
+                    }
+                } if genre_id else {}
+            } if genre_id else {}
+        }
 
-        query = f"""
-        SELECT DISTINCT m.*
-        FROM movies m
-        JOIN UserFavorites uf ON uf.movieId = m.movie_id
-        LEFT JOIN movie_genres mg ON mg.movie_id = m.movie_id
-        WHERE uf.userId = {current_user_id}
-        {genre_filter}
-        ORDER BY uf.timestamp DESC
-        LIMIT {page_size} OFFSET {skip};
-        """
+        # Fetch paginated favorite movies
+        favorites = UserFavorites.prisma().find_many(
+            where=filter_condition,
+            order={"timestamp": "desc"},
+            skip=skip,
+            take=page_size,
+            include={"movie": True}
+        )
 
-        count_query = f"""
-        SELECT COUNT(DISTINCT m.movie_id) AS total
-        FROM movies m
-        JOIN UserFavorites uf ON uf.movieId = m.movie_id
-        LEFT JOIN movie_genres mg ON mg.movie_id = m.movie_id
-        WHERE uf.userId = {current_user_id}
-        {genre_filter};
-        """
+        # Fetch count
+        total_count = UserFavorites.prisma().count(where=filter_condition)
 
-        movies = db.query_raw(query)
-        print("---------", movies)
-        count_result = db.query_raw(count_query)
-        total_count = count_result[0]['total'] if count_result else 0
+        # Extract movies from favorites
+        movies = [fav.movieId for fav in favorites]
 
         return movies, total_count, None
 
     except Exception as e:
-        return None, 0, str(e)
+        return [], 0, str(e)
