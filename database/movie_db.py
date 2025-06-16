@@ -176,7 +176,7 @@ def get_top_n_movies(n, genre_id):
     except Exception as e:
         return None, str(e)
     
-def get_favourits_movies(
+def get_favorites_movies(
     page: int = 1,
     page_size: int = 10,
     genre_id: Optional[int] = None,

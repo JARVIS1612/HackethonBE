@@ -6,7 +6,7 @@ from database.movie_db import (
     get_all_movies_from_db, 
     get_movie_by_id_from_db, 
     get_movies_by_genre_from_db,
-    get_favourits_movies,
+    get_favorites_movies,
     get_all_genres_from_db,
     get_top_n_movies
 )
@@ -115,7 +115,7 @@ def filter_movies_endpoint(
         )
     
     elif favourits_movies:
-        movies_data, total_count, error = get_favourits_movies(
+        movies_data, total_count, error = get_favorites_movies(
             page=page,
             page_size=page_size,
             genre_id=genre_id,
