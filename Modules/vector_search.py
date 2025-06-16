@@ -21,7 +21,7 @@ async def search_movies(
     current_user: Dict = Depends(get_current_user)
 ):
     try:
-        # results = vector_store.search(query, k)
+        results = vector_store.search(query, k)
         
         # Store search history
         search_history, history_error = add_search_history(current_user.id, query)
@@ -30,7 +30,7 @@ async def search_movies(
             
         return {
             "success": True,
-            "data": [],
+            "data": results,
             "message": "Search completed successfully"
         }
     except Exception as e:
