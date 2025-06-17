@@ -115,7 +115,7 @@ def filter_movies_endpoint(
         )
     
     elif favourits_movies:
-        movie_ids, total_count, error = get_favorites_movies(
+        movies_data, total_count, error = get_favorites_movies(
             page=page,
             page_size=page_size,
             genre_id=genre_id,
@@ -125,11 +125,9 @@ def filter_movies_endpoint(
         return unified_response(False, f"Error fetching movies: {error}", status_code=500)
     
     formatted_movies = []
-    for movie in movie_ids:
-        data, error = get_movie_by_id_from_db(movie)
-        if data:
-            movie_data = format_movie_data(data)
-            formatted_movies.append(movie_data)
+    for movie in movies_data:
+        movie_data = format_movie_data(movie)
+        formatted_movies.append(movie_data)
     
     response_data = {
         "movies": formatted_movies,

@@ -206,11 +206,13 @@ def get_favorites_movies(
             include={"movie": True}
         )
 
+        movies = []
+        for favorite in favorites:
+            movie = favorite.movie
+            movies.append(movie)
+
         # Fetch count
         total_count = UserFavorites.prisma().count(where=filter_condition)
-
-        # Extract movies from favorites
-        movies = [fav.movieId for fav in favorites]
 
         return movies, total_count, None
 
